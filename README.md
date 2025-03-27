@@ -38,6 +38,18 @@ output "permissions" {
 }
 ```
 
+### 5. Use account resource
+
+```hcl
+resource "hautech_account" "example" {
+  alias = "optional_alias" # This is optional
+}
+
+output "account_id" {
+  value = hautech_account.example.id
+}
+```
+
 ---
 
 ## 🧪 Local development
@@ -109,3 +121,35 @@ output "permission_list" {
   value = data.hautech_available_permissions.permissions.items
 }
 ```
+
+### 📘 `hautech_account` Resource
+
+Creates or finds an account by alias. Alias is optional.
+
+---
+
+### 🧱 Example Usage
+
+```hcl
+resource "hautech_account" "example" {
+  alias = "my-account" # Optional
+}
+```
+
+---
+
+### 🔁 Attributes
+
+| Name   | Type     | Description                          |
+|--------|----------|--------------------------------------|
+| id     | `string` | Unique identifier of the account     |
+| alias  | `string` | Optional alias for the account       |
+
+---
+
+### 🔍 Behavior
+
+- If alias is provided and account exists — it reuses that account.
+- If alias is not provided — it creates a new account.
+- On update, it follows same behavior as create.
+- On delete, it only removes from Terraform state (not API side).

@@ -36,11 +36,9 @@ func (r *AccountResource) Metadata(_ context.Context, req resource.MetadataReque
 func (r *AccountResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
-			},
+			"id": schema.StringAttribute{Computed: true},
 			"alias": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 			},
 		},
 	}
@@ -50,31 +48,31 @@ func (r *AccountResource) Configure(_ context.Context, req resource.ConfigureReq
 	if req.ProviderData == nil {
 		return
 	}
-
 	r.client = req.ProviderData.(*ProviderContext).Client
 }
 
 func (r *AccountResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data AccountResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...) // get alias from input
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	id, diags := r.getOrCreateAccount(ctx, data.Alias.ValueString())
+	alias := data.Alias.ValueString()
+	id, diags := r.getOrCreateAccount(ctx, alias)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	data.Id = types.StringValue(id)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...) // save id to state
-	tflog.Trace(ctx, "Account resource created or found", map[string]any{"id": data.Id.ValueString(), "alias": data.Alias.ValueString()})
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	tflog.Trace(ctx, "Account resource created or found", map[string]any{"id": data.Id.ValueString(), "alias": alias})
 }
 
 func (r *AccountResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var data AccountResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...) // read current state
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -95,26 +93,27 @@ func (r *AccountResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...) // update state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 	tflog.Trace(ctx, "Account resource read", map[string]any{"id": data.Id.ValueString(), "alias": data.Alias.ValueString()})
 }
 
 func (r *AccountResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var data AccountResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...) // get new alias
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	id, diags := r.getOrCreateAccount(ctx, data.Alias.ValueString())
+	alias := data.Alias.ValueString()
+	id, diags := r.getOrCreateAccount(ctx, alias)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	data.Id = types.StringValue(id)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...) // update state
-	tflog.Trace(ctx, "Account resource updated or created", map[string]any{"id": data.Id.ValueString(), "alias": data.Alias.ValueString()})
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	tflog.Trace(ctx, "Account resource updated or created", map[string]any{"id": data.Id.ValueString(), "alias": alias})
 }
 
 func (r *AccountResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -125,30 +124,37 @@ func (r *AccountResource) Delete(ctx context.Context, req resource.DeleteRequest
 func (r *AccountResource) getOrCreateAccount(ctx context.Context, alias string) (string, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	getResp, err := r.client.AccountsControllerGetAccountByAliasV1WithResponse(ctx, alias)
+	if alias != "" {
+		getResp, err := r.client.AccountsControllerGetAccountByAliasV1WithResponse(ctx, alias)
+		if err != nil {
+			diags.AddError("API Error - Get Account by Alias", fmt.Sprintf("failed to get account by alias: %v", err))
+			return "", diags
+		}
+
+		if getResp.StatusCode() == http.StatusOK && getResp.JSON200 != nil {
+			return getResp.JSON200.Id, diags
+		}
+
+		if getResp.StatusCode() != http.StatusNotFound {
+			diags.AddError("API Error - Get Account by Alias", fmt.Sprintf("unexpected status code: %d", getResp.StatusCode()))
+			return "", diags
+		}
+	}
+
+	params := hautechapi.CreateAccountParamsDto{}
+	if alias != "" {
+		params.Alias = &alias
+	}
+
+	createResp, err := r.client.AccountsControllerCreateAccountV1WithResponse(ctx, params)
 	if err != nil {
-		diags.AddError("API Error - Get Account by Alias", fmt.Sprintf("failed to get account by alias: %v", err))
+		diags.AddError("API Error - Create Account", fmt.Sprintf("failed to create account: %v", err))
+		return "", diags
+	}
+	if createResp.StatusCode() != http.StatusCreated || createResp.JSON201 == nil {
+		diags.AddError("API Error - Create Account", "unexpected response from account creation")
 		return "", diags
 	}
 
-	if getResp.StatusCode() == http.StatusOK && getResp.JSON200 != nil {
-		return getResp.JSON200.Id, diags
-	}
-
-	if getResp.StatusCode() == http.StatusNotFound {
-		createParams := hautechapi.CreateAccountParamsDto{Alias: &alias}
-		createResp, err := r.client.AccountsControllerCreateAccountV1WithResponse(ctx, createParams)
-		if err != nil {
-			diags.AddError("API Error - Create Account", fmt.Sprintf("failed to create account: %v", err))
-			return "", diags
-		}
-		if createResp.StatusCode() != http.StatusCreated || createResp.JSON201 == nil {
-			diags.AddError("API Error - Create Account", "unexpected response from account creation")
-			return "", diags
-		}
-		return createResp.JSON201.Id, diags
-	}
-
-	diags.AddError("API Error - Get Account by Alias", fmt.Sprintf("unexpected status code: %d", getResp.StatusCode()))
-	return "", diags
+	return createResp.JSON201.Id, diags
 }
