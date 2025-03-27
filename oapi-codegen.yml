@@ -1,0 +1,5 @@
+package: hautechapi
+generate:
+  client: true
+  models: true
+output: api/hautechapi.gen.go

@@ -2,11 +2,11 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"net/url"
-
 	hautechapi "hautech/api"
+	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
@@ -51,22 +51,22 @@ func (p *hautechProvider) Schema(_ context.Context, _ provider.SchemaRequest, re
 	}
 }
 
-func createClient(apiURL string, apiToken string) (*hautechapi.APIClient, error) {
-	parsedUrl, err := url.Parse(apiURL)
-	if err != nil {
-		return nil, err
+func createClient(apiURL string, apiToken string) (*hautechapi.ClientWithResponses, error) {
+	authEditor := func(ctx context.Context, req *http.Request) error {
+		req.Header.Set("Authorization", "Bearer "+apiToken)
+		return nil
 	}
 
-	cfg := hautechapi.NewConfiguration()
-	cfg.Host = parsedUrl.Host
-	cfg.Scheme = parsedUrl.Scheme
-	cfg.DefaultHeader["Authorization"] = "Bearer " + apiToken
+	client, err := hautechapi.NewClientWithResponses(apiURL, hautechapi.WithRequestEditorFn(authEditor))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create client: %w", err)
+	}
 
-	return hautechapi.NewAPIClient(cfg), nil
+	return client, nil
 }
 
 type ProviderContext struct {
-	Client *hautechapi.APIClient
+	Client *hautechapi.ClientWithResponses
 }
 
 func (p *hautechProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
@@ -89,7 +89,9 @@ func (p *hautechProvider) Configure(ctx context.Context, req provider.ConfigureR
 }
 
 func (p *hautechProvider) Resources(_ context.Context) []func() resource.Resource {
-	return nil
+	return []func() resource.Resource{
+		NewAccountResource,
+	}
 }
 
 func (p *hautechProvider) DataSources(_ context.Context) []func() datasource.DataSource {

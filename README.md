@@ -54,7 +54,7 @@ This will:
 - Build the provider binary
 - Copy it into your local Terraform plugin directory under:
   ```
-  ~/.terraform.d/plugins/registry.terraform.io/hautech/api/0.1.0/<os>_<arch>/terraform-provider-api
+  ~/.terraform.d/plugins/registry.terraform.io/hautech/api/0.1.0-dev/<os>_<arch>/terraform-provider-api
   ```
 
 2. Then use it like a normal provider in your Terraform project:
@@ -64,10 +64,48 @@ terraform {
   required_providers {
     hautech = {
       source  = "hautech/api"
-      version = "0.1.0"
+      version = "0.1.0-dev"
     }
   }
 }
 ```
 
 No need to mess with `.terraformrc` or overrides — it just works locally ✨
+
+## Docs
+
+### 📘 `hautech_available_permissions` Data Source
+
+This data source fetches the list of available permissions from the Hautech API.
+
+---
+
+### 🧱 Example Usage
+
+```hcl
+data "hautech_available_permissions" "permissions" {}
+```
+
+---
+
+### 🔁 Output Attributes
+
+| Name   | Type          | Description                              |
+|--------|---------------|------------------------------------------|
+| items  | `list(string)`| List of available permission identifiers |
+
+---
+
+### 🧾 Full Example
+
+```hcl
+provider "hautech" {
+  api_token = "your_token_here"
+}
+
+data "hautech_available_permissions" "permissions" {}
+
+output "permission_list" {
+  value = data.hautech_available_permissions.permissions.items
+}
+```

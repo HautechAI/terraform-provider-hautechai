@@ -2,7 +2,7 @@
 
 OS=$(go env GOOS)
 ARCH=$(go env GOARCH)
-VERSION="0.1.0"
+VERSION="0.1.0-dev"
 PROVIDER_NAME="api"
 NAMESPACE="hautech"
 REGISTRY="registry.terraform.io"
