@@ -21,8 +21,9 @@ type AccountResource struct {
 }
 
 type AccountResourceModel struct {
-	Id    types.String `tfsdk:"id"`
-	Alias types.String `tfsdk:"alias"`
+	Id        types.String `tfsdk:"id"`
+	AccountId types.String `tfsdk:"account_id"`
+	Alias     types.String `tfsdk:"alias"`
 }
 
 func NewAccountResource() resource.Resource {
@@ -36,7 +37,12 @@ func (r *AccountResource) Metadata(_ context.Context, req resource.MetadataReque
 func (r *AccountResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{Computed: true},
+			"id": schema.StringAttribute{
+				Computed: true,
+			},
+			"account_id": schema.StringAttribute{
+				Optional: true,
+			},
 			"alias": schema.StringAttribute{
 				Optional: true,
 			},
@@ -59,7 +65,9 @@ func (r *AccountResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	alias := data.Alias.ValueString()
-	id, diags := r.getOrCreateAccount(ctx, alias)
+	id := data.AccountId.ValueString()
+
+	id, diags := r.getOrCreateAccount(ctx, alias, id)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -105,7 +113,9 @@ func (r *AccountResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	alias := data.Alias.ValueString()
-	id, diags := r.getOrCreateAccount(ctx, alias)
+	id := data.AccountId.ValueString()
+
+	id, diags := r.getOrCreateAccount(ctx, alias, id)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -121,8 +131,30 @@ func (r *AccountResource) Delete(ctx context.Context, req resource.DeleteRequest
 	tflog.Trace(ctx, "Account resource deleted")
 }
 
-func (r *AccountResource) getOrCreateAccount(ctx context.Context, alias string) (string, diag.Diagnostics) {
+func (r *AccountResource) getOrCreateAccount(ctx context.Context, alias string, id string) (string, diag.Diagnostics) {
 	var diags diag.Diagnostics
+
+	if id != "" {
+		getResp, err := r.client.AccountsControllerGetAccountV1WithResponse(ctx, id)
+		if err != nil {
+			diags.AddError("API Error - Get Account by Id", fmt.Sprintf("failed to get account by alias: %v", err))
+			return "", diags
+		}
+
+		if getResp.StatusCode() == http.StatusNotFound {
+			diags.AddError("API Error - Account not found", fmt.Sprintf("unexpected status code: %d", getResp.StatusCode()))
+			return "", diags
+		}
+
+		if getResp.StatusCode() != http.StatusOK {
+			diags.AddError("API Error - Get Account by Id", fmt.Sprintf("unexpected status code: %d", getResp.StatusCode()))
+			return "", diags
+		}
+
+		if getResp.StatusCode() == http.StatusOK && getResp.JSON200 != nil {
+			return getResp.JSON200.Id, diags
+		}
+	}
 
 	if alias != "" {
 		getResp, err := r.client.AccountsControllerGetAccountByAliasV1WithResponse(ctx, alias)

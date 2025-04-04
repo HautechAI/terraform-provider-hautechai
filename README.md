@@ -1,5 +1,5 @@
 ## Terraform provider for Hautech API
-You can check api [here](https://api.hautech.ai/swagger)
+You can check API [here](https://api.hautech.ai/swagger)
 
 ## 🔧 How to use
 
@@ -38,15 +38,74 @@ output "permissions" {
 }
 ```
 
-### 5. Use account resource
+---
+
+## 📘 `hautech_account` Resource
+
+This resource manages an account in the Hautech API.
+
+### Attributes:
+
+| Name        | Type          | Description |
+|-------------|---------------|-------------|
+| id          | string (computed) | Unique identifier returned by the API. Saved in state. |
+| account_id  | string (optional) | ID to look up an existing account. If found, it will be used. If not found, the apply will fail. |
+| alias       | string (optional) | Alias to find or create the account. If `account_id` is not set, it will use alias. |
+
+### ⚠️ Behavior
+
+This is an **immutable resource**. You cannot update existing accounts via Terraform.
+
+On `create` and `update`, the logic is:
+
+1. If `account_id` is provided:
+  - Try to fetch the account by ID.
+  - If not found, it throws an error.
+
+2. Else if `alias` is provided:
+  - Try to fetch the account by alias.
+  - If not found, it creates a new account with that alias.
+
+3. Else:
+  - Create a brand new account with no alias.
+
+### Example
 
 ```hcl
-resource "hautech_account" "example" {
-  alias = "optional_alias" # This is optional
+resource "hautech_account" "main" {
+  alias = "example-account"
+}
+```
+
+---
+
+## 📘 `hautech_available_permissions` Data Source
+
+This data source fetches the list of available permissions from the Hautech API.
+
+### Example
+
+```hcl
+data "hautech_available_permissions" "permissions" {}
+```
+
+### Output Attributes
+
+| Name   | Type          | Description                              |
+|--------|---------------|------------------------------------------|
+| items  | `list(string)`| List of available permission identifiers |
+
+### Full Example
+
+```hcl
+provider "hautech" {
+  api_token = "your_token_here"
 }
 
-output "account_id" {
-  value = hautech_account.example.id
+data "hautech_available_permissions" "permissions" {}
+
+output "permission_list" {
+  value = data.hautech_available_permissions.permissions.items
 }
 ```
 
@@ -83,73 +142,3 @@ terraform {
 ```
 
 No need to mess with `.terraformrc` or overrides — it just works locally ✨
-
-## Docs
-
-### 📘 `hautech_available_permissions` Data Source
-
-This data source fetches the list of available permissions from the Hautech API.
-
----
-
-### 🧱 Example Usage
-
-```hcl
-data "hautech_available_permissions" "permissions" {}
-```
-
----
-
-### 🔁 Output Attributes
-
-| Name   | Type          | Description                              |
-|--------|---------------|------------------------------------------|
-| items  | `list(string)`| List of available permission identifiers |
-
----
-
-### 🧾 Full Example
-
-```hcl
-provider "hautech" {
-  api_token = "your_token_here"
-}
-
-data "hautech_available_permissions" "permissions" {}
-
-output "permission_list" {
-  value = data.hautech_available_permissions.permissions.items
-}
-```
-
-### 📘 `hautech_account` Resource
-
-Creates or finds an account by alias. Alias is optional.
-
----
-
-### 🧱 Example Usage
-
-```hcl
-resource "hautech_account" "example" {
-  alias = "my-account" # Optional
-}
-```
-
----
-
-### 🔁 Attributes
-
-| Name   | Type     | Description                          |
-|--------|----------|--------------------------------------|
-| id     | `string` | Unique identifier of the account     |
-| alias  | `string` | Optional alias for the account       |
-
----
-
-### 🔍 Behavior
-
-- If alias is provided and account exists — it reuses that account.
-- If alias is not provided — it creates a new account.
-- On update, it follows same behavior as create.
-- On delete, it only removes from Terraform state (not API side).
