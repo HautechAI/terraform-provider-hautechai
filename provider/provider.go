@@ -98,5 +98,6 @@ func (p *hautechProvider) DataSources(_ context.Context) []func() datasource.Dat
 	return []func() datasource.DataSource{
 		NewAvailablePermissionsDataSource,
 		NewAccountBalanceDataSource,
+		NewAccountDataSource,
 	}
 }

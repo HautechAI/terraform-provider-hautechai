@@ -19,9 +19,8 @@ type AccountResource struct {
 }
 
 type AccountResourceModel struct {
-	Id        types.String `tfsdk:"id"`
-	AccountId types.String `tfsdk:"account_id"`
-	Alias     types.String `tfsdk:"alias"`
+	Id    types.String `tfsdk:"id"`
+	Alias types.String `tfsdk:"alias"`
 }
 
 func NewAccountResource() resource.Resource {
@@ -38,12 +37,6 @@ func (r *AccountResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,
-			},
-			"account_id": schema.StringAttribute{
-				Optional: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			"alias": schema.StringAttribute{
 				Optional: true,
@@ -68,7 +61,7 @@ func (r *AccountResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	acc, err := r.getOrCreateAccount(ctx, data.Alias.ValueString(), data.AccountId.ValueString())
+	acc, err := r.getOrCreateAccount(ctx, data.Alias.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Get or create Account Error", err.Error())
 		return
@@ -102,7 +95,7 @@ func (r *AccountResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	acc, err := r.getOrCreateAccount(ctx, data.Alias.ValueString(), data.AccountId.ValueString())
+	acc, err := r.getOrCreateAccount(ctx, data.Alias.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Get or create Account Error", err.Error())
 		return
@@ -169,13 +162,7 @@ func (r *AccountResource) createAccount(ctx context.Context, alias string) (*hau
 	return resp.JSON201, nil
 }
 
-func (r *AccountResource) getOrCreateAccount(ctx context.Context, alias, id string) (*hautechapi.AccountEntity, error) {
-	if id != "" {
-		acc, err := r.getAccountByID(ctx, id)
-
-		return acc, err
-	}
-
+func (r *AccountResource) getOrCreateAccount(ctx context.Context, alias string) (*hautechapi.AccountEntity, error) {
 	if alias != "" {
 		acc, err := r.getAccountByAlias(ctx, alias)
 		if err != nil && err.Error() != "account not found" {

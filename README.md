@@ -80,7 +80,6 @@ This resource manages an account in the Hautech API.
 | Name        | Type          | Description |
 |-------------|---------------|-------------|
 | id          | string (computed) | Unique identifier returned by the API. Saved in state. |
-| account_id  | string (optional) | ID to look up an existing account. If found, it will be used. If not found, the apply will fail. |
 | alias       | string (optional) | Alias to find or create the account. If `account_id` is not set, it will use alias. |
 
 ### ⚠️ Behavior
@@ -89,15 +88,11 @@ This is an **immutable resource**. You cannot update existing accounts via Terra
 
 On `create` and `update`, the logic is:
 
-1. If `account_id` is provided:
-  - Try to fetch the account by ID.
-  - If not found, it throws an error.
-
-2. Else if `alias` is provided:
+1. If `alias` is provided:
   - Try to fetch the account by alias.
   - If not found, it creates a new account with that alias.
 
-3. Else:
+2. Else:
   - Create a brand new account with no alias.
 
 ### Example
@@ -125,20 +120,6 @@ data "hautech_available_permissions" "permissions" {}
 | Name   | Type          | Description                              |
 |--------|---------------|------------------------------------------|
 | items  | `list(string)`| List of available permission identifiers |
-
-### Full Example
-
-```hcl
-provider "hautech" {
-  api_token = "your_token_here"
-}
-
-data "hautech_available_permissions" "permissions" {}
-
-output "permission_list" {
-  value = data.hautech_available_permissions.permissions.items
-}
-```
 
 ---
 
@@ -170,3 +151,27 @@ output "balance" {
 |---------|--------|---------------------|
 | amount  | string | The current balance |
 
+
+---
+
+## 📚 `hautech_account` Data Source
+
+This data source fetches the specific account by its `id`.
+
+#### ⚙️ Example Usage
+
+```hcl
+data "hautech_account" "account" {
+  id = "your-account-id-here"
+}
+
+output "account" {
+  value = data.account.id
+}
+```
+
+#### 📅 Input Parameters
+
+| Name | Type    | Required | Description                    |
+|------|---------|----------|--------------------------------|
+| id   | string  | ✅ Yes   | The ID of the account |
