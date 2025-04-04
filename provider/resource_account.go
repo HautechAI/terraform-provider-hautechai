@@ -3,18 +3,16 @@ package provider
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"net/http"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	hautechapi "hautech/api"
 )
-
-var _ resource.Resource = &AccountResource{}
 
 type AccountResource struct {
 	client *hautechapi.ClientWithResponses
@@ -36,25 +34,31 @@ func (r *AccountResource) Metadata(_ context.Context, req resource.MetadataReque
 
 func (r *AccountResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		Description: "Manage Hautech accounts.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
 			"account_id": schema.StringAttribute{
 				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"alias": schema.StringAttribute{
 				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 		},
 	}
 }
 
 func (r *AccountResource) Configure(_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
+	if req.ProviderData != nil {
+		r.client = req.ProviderData.(*ProviderContext).Client
 	}
-	r.client = req.ProviderData.(*ProviderContext).Client
 }
 
 func (r *AccountResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -64,18 +68,14 @@ func (r *AccountResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	alias := data.Alias.ValueString()
-	id := data.AccountId.ValueString()
-
-	id, diags := r.getOrCreateAccount(ctx, alias, id)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
+	acc, err := r.getOrCreateAccount(ctx, data.Alias.ValueString(), data.AccountId.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Get or create Account Error", err.Error())
 		return
 	}
 
-	data.Id = types.StringValue(id)
+	data.Id = types.StringValue(acc.Id)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-	tflog.Trace(ctx, "Account resource created or found", map[string]any{"id": data.Id.ValueString(), "alias": alias})
 }
 
 func (r *AccountResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -85,24 +85,14 @@ func (r *AccountResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	getResp, err := r.client.AccountsControllerGetAccountV1WithResponse(ctx, data.Id.ValueString())
+	acc, err := r.getAccountByID(ctx, data.Id.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("API Error - Read Account", fmt.Sprintf("failed to read account: %v", err))
+		resp.Diagnostics.AddError("Get Account Error", err.Error())
 		return
 	}
 
-	if getResp.StatusCode() == http.StatusOK && getResp.JSON200 != nil {
-		data.Id = types.StringValue(getResp.JSON200.Id)
-	} else if getResp.StatusCode() == http.StatusNotFound {
-		resp.State.RemoveResource(ctx)
-		return
-	} else {
-		resp.Diagnostics.AddError("API Error - Read Account", fmt.Sprintf("unexpected status code: %d", getResp.StatusCode()))
-		return
-	}
-
+	data.Id = types.StringValue(acc.Id)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-	tflog.Trace(ctx, "Account resource read", map[string]any{"id": data.Id.ValueString(), "alias": data.Alias.ValueString()})
 }
 
 func (r *AccountResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -112,81 +102,92 @@ func (r *AccountResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	alias := data.Alias.ValueString()
-	id := data.AccountId.ValueString()
-
-	id, diags := r.getOrCreateAccount(ctx, alias, id)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
+	acc, err := r.getOrCreateAccount(ctx, data.Alias.ValueString(), data.AccountId.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Get or create Account Error", err.Error())
 		return
 	}
 
-	data.Id = types.StringValue(id)
+	data.Id = types.StringValue(acc.Id)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-	tflog.Trace(ctx, "Account resource updated or created", map[string]any{"id": data.Id.ValueString(), "alias": alias})
 }
 
 func (r *AccountResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	resp.State.RemoveResource(ctx)
-	tflog.Trace(ctx, "Account resource deleted")
 }
 
-func (r *AccountResource) getOrCreateAccount(ctx context.Context, alias string, id string) (string, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	if id != "" {
-		getResp, err := r.client.AccountsControllerGetAccountV1WithResponse(ctx, id)
-		if err != nil {
-			diags.AddError("API Error - Get Account by Id", fmt.Sprintf("failed to get account by alias: %v", err))
-			return "", diags
-		}
-
-		if getResp.StatusCode() == http.StatusNotFound {
-			diags.AddError("API Error - Account not found", fmt.Sprintf("unexpected status code: %d", getResp.StatusCode()))
-			return "", diags
-		}
-
-		if getResp.StatusCode() != http.StatusOK {
-			diags.AddError("API Error - Get Account by Id", fmt.Sprintf("unexpected status code: %d", getResp.StatusCode()))
-			return "", diags
-		}
-
-		if getResp.StatusCode() == http.StatusOK && getResp.JSON200 != nil {
-			return getResp.JSON200.Id, diags
-		}
+func (r *AccountResource) getAccountByID(ctx context.Context, id string) (*hautechapi.AccountEntity, error) {
+	resp, err := r.client.AccountsControllerGetAccountV1WithResponse(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to call API: %w", err)
 	}
 
-	if alias != "" {
-		getResp, err := r.client.AccountsControllerGetAccountByAliasV1WithResponse(ctx, alias)
-		if err != nil {
-			diags.AddError("API Error - Get Account by Alias", fmt.Sprintf("failed to get account by alias: %v", err))
-			return "", diags
-		}
-
-		if getResp.StatusCode() == http.StatusOK && getResp.JSON200 != nil {
-			return getResp.JSON200.Id, diags
-		}
-
-		if getResp.StatusCode() != http.StatusNotFound {
-			diags.AddError("API Error - Get Account by Alias", fmt.Sprintf("unexpected status code: %d", getResp.StatusCode()))
-			return "", diags
-		}
+	if resp.StatusCode() == http.StatusNotFound {
+		return nil, fmt.Errorf("account not found")
 	}
 
+	if resp.StatusCode() != http.StatusOK || resp.JSON200 == nil {
+		return nil, fmt.Errorf("unexpected response: %d - body: %s", resp.StatusCode(), string(resp.Body))
+	}
+
+	return resp.JSON200, nil
+}
+
+func (r *AccountResource) getAccountByAlias(ctx context.Context, alias string) (*hautechapi.AccountEntity, error) {
+	resp, err := r.client.AccountsControllerGetAccountByAliasV1WithResponse(ctx, alias)
+	if err != nil {
+		return nil, fmt.Errorf("failed to call API: %w", err)
+	}
+
+	if resp.StatusCode() == http.StatusNotFound {
+		return nil, fmt.Errorf("account not found")
+	}
+
+	if resp.StatusCode() != http.StatusOK || resp.JSON200 == nil {
+		return nil, fmt.Errorf("unexpected response: %d - body: %s", resp.StatusCode(), string(resp.Body))
+	}
+
+	return resp.JSON200, nil
+}
+
+func (r *AccountResource) createAccount(ctx context.Context, alias string) (*hautechapi.AccountEntity, error) {
 	params := hautechapi.CreateAccountParamsDto{}
 	if alias != "" {
 		params.Alias = &alias
 	}
 
-	createResp, err := r.client.AccountsControllerCreateAccountV1WithResponse(ctx, params)
+	resp, err := r.client.AccountsControllerCreateAccountV1WithResponse(ctx, params)
+
 	if err != nil {
-		diags.AddError("API Error - Create Account", fmt.Sprintf("failed to create account: %v", err))
-		return "", diags
-	}
-	if createResp.StatusCode() != http.StatusCreated || createResp.JSON201 == nil {
-		diags.AddError("API Error - Create Account", "unexpected response from account creation")
-		return "", diags
+		return nil, fmt.Errorf("failed to call API: %w", err)
 	}
 
-	return createResp.JSON201.Id, diags
+	if resp.StatusCode() != http.StatusCreated || resp.JSON201 == nil {
+		return nil, fmt.Errorf("unexpected response: %d - body: %s", resp.StatusCode(), string(resp.Body))
+	}
+
+	return resp.JSON201, nil
+}
+
+func (r *AccountResource) getOrCreateAccount(ctx context.Context, alias, id string) (*hautechapi.AccountEntity, error) {
+	if id != "" {
+		acc, err := r.getAccountByID(ctx, id)
+
+		return acc, err
+	}
+
+	if alias != "" {
+		acc, err := r.getAccountByAlias(ctx, alias)
+		if err != nil && err.Error() != "account not found" {
+			return nil, err
+		}
+
+		if acc != nil {
+			return acc, nil
+		}
+	}
+
+	acc, err := r.createAccount(ctx, alias)
+
+	return acc, err
 }

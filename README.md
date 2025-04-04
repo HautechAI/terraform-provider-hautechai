@@ -37,6 +37,37 @@ output "permissions" {
   value = data.hautech_available_permissions.permissions.items
 }
 ```
+---
+
+## 🧪 Local development
+
+To test the provider locally without publishing it to the Terraform Registry:
+
+1. Run the helper script:
+
+```bash
+./scripts/build-for-local.sh
+```
+
+This will:
+- Build the provider binary
+- Copy it into your local Terraform plugin directory under:
+  ```
+  ~/.terraform.d/plugins/registry.terraform.io/hautech/api/0.1.0-dev/<os>_<arch>/terraform-provider-api
+  ```
+
+2. Then use it like a normal provider in your Terraform project:
+
+```hcl
+terraform {
+  required_providers {
+    hautech = {
+      source  = "hautech/api"
+      version = "0.1.0-dev"
+    }
+  }
+}
+```
 
 ---
 
@@ -111,34 +142,31 @@ output "permission_list" {
 
 ---
 
-## 🧪 Local development
+## 📚 `hautech_account_balance` Data Source
 
-To test the provider locally without publishing it to the Terraform Registry:
+This data source fetches the balance of a specific account by its `account_id`.
 
-1. Run the helper script:
-
-```bash
-./scripts/build-for-local.sh
-```
-
-This will:
-- Build the provider binary
-- Copy it into your local Terraform plugin directory under:
-  ```
-  ~/.terraform.d/plugins/registry.terraform.io/hautech/api/0.1.0-dev/<os>_<arch>/terraform-provider-api
-  ```
-
-2. Then use it like a normal provider in your Terraform project:
+#### ⚙️ Example Usage
 
 ```hcl
-terraform {
-  required_providers {
-    hautech = {
-      source  = "hautech/api"
-      version = "0.1.0-dev"
-    }
-  }
+data "hautech_account_balance" "balance" {
+  account_id = "your-account-id-here"
+}
+
+output "balance" {
+  value = data.hautech_account_balance.balance.amount
 }
 ```
 
-No need to mess with `.terraformrc` or overrides — it just works locally ✨
+#### 📅 Input Parameters
+
+| Name        | Type    | Required | Description                    |
+|-------------|---------|----------|--------------------------------|
+| account_id  | string  | ✅ Yes   | The ID of the account to fetch balance for |
+
+#### 📄 Output Attributes
+
+| Name    | Type   | Description         |
+|---------|--------|---------------------|
+| amount  | string | The current balance |
+

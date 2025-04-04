@@ -3,7 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"net/http"
 
 	hautechapi "hautech/api"
 
@@ -12,13 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-var _ datasource.DataSource = &AvailablePermissionsDataSource{}
-
 type AvailablePermissionsDataSource struct {
 	client *hautechapi.ClientWithResponses
 }
 
-type availablePermissionsModel struct {
+type AvailablePermissionsModel struct {
 	Items []types.String `tfsdk:"items"`
 }
 
@@ -43,29 +41,15 @@ func (d *AvailablePermissionsDataSource) Schema(_ context.Context, _ datasource.
 }
 
 func (d *AvailablePermissionsDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
+	if req.ProviderData != nil {
+		d.client = req.ProviderData.(*ProviderContext).Client
 	}
-
-	ctx := req.ProviderData.(*ProviderContext)
-	d.client = ctx.Client
 }
 
 func (d *AvailablePermissionsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	apiResp, err := d.client.PermissionsControllerListAvailablePermissionsV1WithResponse(ctx)
+	permissions, err := d.getPermissions(ctx)
 	if err != nil {
-		resp.Diagnostics.AddError("API Error", fmt.Sprintf("failed to list available permissions: %v", err))
-		return
-	}
-
-	if apiResp.StatusCode() != 200 {
-		resp.Diagnostics.AddError("API Error", fmt.Sprintf("unexpected status code: %d", apiResp.StatusCode()))
-		return
-	}
-
-	permissions := apiResp.JSON200
-	if permissions == nil {
-		resp.Diagnostics.AddError("API Error", "received nil permissions from API")
+		resp.Diagnostics.AddError("Get Permissions Error", err.Error())
 		return
 	}
 
@@ -74,14 +58,23 @@ func (d *AvailablePermissionsDataSource) Read(ctx context.Context, req datasourc
 		tfItems = append(tfItems, types.StringValue(item))
 	}
 
-	state := availablePermissionsModel{
+	state := AvailablePermissionsModel{
 		Items: tfItems,
 	}
 
 	diags := resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
+}
 
-	tflog.Trace(ctx, "Retrieved available permissions", map[string]interface{}{
-		"count": len(tfItems),
-	})
+func (d *AvailablePermissionsDataSource) getPermissions(ctx context.Context) (*[]string, error) {
+	resp, err := d.client.PermissionsControllerListAvailablePermissionsV1WithResponse(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to call API: %w", err)
+	}
+
+	if resp.StatusCode() != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status: %d - body: %s", resp.StatusCode(), string(resp.Body))
+	}
+
+	return resp.JSON200, nil
 }
