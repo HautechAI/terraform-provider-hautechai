@@ -44,7 +44,7 @@ func (r *CollectionResource) Schema(_ context.Context, _ resource.SchemaRequest,
 
 func (r *CollectionResource) Configure(_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
 	if req.ProviderData != nil {
-		r.client = req.ProviderData.(*ProviderContext).Client
+		r.client = req.ProviderData.(*Context).Client
 	}
 }
 
@@ -149,7 +149,6 @@ func (r *CollectionResource) getCollectionByID(ctx context.Context, id string) (
 
 func (r *CollectionResource) createCollection(ctx context.Context, params hautechapi.CreateCollectionParamsDto) (*hautechapi.CollectionEntity, error) {
 	resp, err := r.client.CollectionsControllerCreateCollectionV1WithResponse(ctx, params)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to call API: %w", err)
 	}
@@ -163,7 +162,6 @@ func (r *CollectionResource) createCollection(ctx context.Context, params hautec
 
 func (r *CollectionResource) updateCollection(ctx context.Context, id string, params hautechapi.CollectionsControllerUpdateMetadataV1JSONRequestBody) (*hautechapi.CollectionEntity, error) {
 	resp, err := r.client.CollectionsControllerUpdateMetadataV1WithResponse(ctx, id, params)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to call API: %w", err)
 	}

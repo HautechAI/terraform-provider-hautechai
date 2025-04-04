@@ -3,13 +3,11 @@ package provider
 import (
 	"context"
 	"fmt"
-	"net/http"
-
-	hautechapi "hautech/api"
-
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	hautechapi "hautech/api"
+	"net/http"
 )
 
 type AccountDataSource struct {
@@ -17,7 +15,7 @@ type AccountDataSource struct {
 }
 
 type AccountModel struct {
-	Id types.String `tfsdk:"id"`
+	ID types.String `tfsdk:"id"`
 }
 
 func NewAccountDataSource() datasource.DataSource {
@@ -39,9 +37,9 @@ func (d *AccountDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 	}
 }
 
-func (d *AccountDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *AccountDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, _ *datasource.ConfigureResponse) {
 	if req.ProviderData != nil {
-		d.client = req.ProviderData.(*ProviderContext).Client
+		d.client = req.ProviderData.(*Context).Client
 	}
 }
 
@@ -52,19 +50,19 @@ func (d *AccountDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	accountId := data.Id.ValueString()
-	balance, err := d.getAccountByID(ctx, accountId)
+	accountId := data.ID.ValueString()
+	account, err := d.getAccountByID(ctx, accountId)
 	if err != nil {
 		resp.Diagnostics.AddError("Get Account Error", err.Error())
 		return
 	}
 
-	data.Id = types.StringValue(balance.Id)
+	data.ID = types.StringValue(account.Id)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *AccountDataSource) getAccountByID(ctx context.Context, id string) (*hautechapi.AccountEntity, error) {
-	resp, err := r.client.AccountsControllerGetAccountV1WithResponse(ctx, id)
+func (d *AccountDataSource) getAccountByID(ctx context.Context, id string) (*hautechapi.AccountEntity, error) {
+	resp, err := d.client.AccountsControllerGetAccountV1WithResponse(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to call API: %w", err)
 	}

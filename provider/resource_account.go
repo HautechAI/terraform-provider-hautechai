@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -13,6 +14,8 @@ import (
 
 	hautechapi "hautech/api"
 )
+
+var ErrAccountNotFound = errors.New("account not found")
 
 type AccountResource struct {
 	client *hautechapi.ClientWithResponses
@@ -50,7 +53,7 @@ func (r *AccountResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 
 func (r *AccountResource) Configure(_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
 	if req.ProviderData != nil {
-		r.client = req.ProviderData.(*ProviderContext).Client
+		r.client = req.ProviderData.(*Context).Client
 	}
 }
 
@@ -133,7 +136,7 @@ func (r *AccountResource) getAccountByAlias(ctx context.Context, alias string) (
 	}
 
 	if resp.StatusCode() == http.StatusNotFound {
-		return nil, fmt.Errorf("account not found")
+		return nil, ErrAccountNotFound
 	}
 
 	if resp.StatusCode() != http.StatusOK || resp.JSON200 == nil {
@@ -163,9 +166,9 @@ func (r *AccountResource) createAccount(ctx context.Context, alias string) (*hau
 }
 
 func (r *AccountResource) getOrCreateAccount(ctx context.Context, alias string) (*hautechapi.AccountEntity, error) {
-	if alias != "" {
+	if len(alias) != 0 {
 		acc, err := r.getAccountByAlias(ctx, alias)
-		if err != nil && err.Error() != "account not found" {
+		if err != nil && !errors.Is(err, ErrAccountNotFound) {
 			return nil, err
 		}
 
@@ -174,7 +177,5 @@ func (r *AccountResource) getOrCreateAccount(ctx context.Context, alias string) 
 		}
 	}
 
-	acc, err := r.createAccount(ctx, alias)
-
-	return acc, err
+	return r.createAccount(ctx, alias)
 }

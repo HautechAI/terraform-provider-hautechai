@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"bytes"
@@ -10,13 +10,22 @@ import (
 //go:embed config.yml
 var configYAML []byte
 
-func getApiUrl() string {
+func GetApiUrl() string {
 	apiUrl := viper.GetString("apiUrl")
 	if apiUrl == "" {
 		log.Fatal("apiUrl is not set in the config file")
 	}
 
 	return apiUrl
+}
+
+func GetProviderAddress() string {
+	providerAddress := viper.GetString("providerAddress")
+	if providerAddress == "" {
+		log.Fatal("providerAddress is not set in the config file")
+	}
+
+	return providerAddress
 }
 
 func init() {

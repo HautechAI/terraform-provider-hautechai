@@ -13,17 +13,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-var _ provider.Provider = &hautechProvider{}
-
-type ProviderConfig struct {
+type Config struct {
 	ApiUrl string
+}
+
+type Context struct {
+	Client *hautechapi.ClientWithResponses
 }
 
 type hautechProvider struct {
 	apiUrl string
 }
 
-func New(cfg ProviderConfig) func() provider.Provider {
+func New(cfg Config) func() provider.Provider {
 	return func() provider.Provider {
 		return &hautechProvider{
 			apiUrl: cfg.ApiUrl,
@@ -51,24 +53,6 @@ func (p *hautechProvider) Schema(_ context.Context, _ provider.SchemaRequest, re
 	}
 }
 
-func createClient(apiURL string, apiToken string) (*hautechapi.ClientWithResponses, error) {
-	authEditor := func(ctx context.Context, req *http.Request) error {
-		req.Header.Set("Authorization", "Bearer "+apiToken)
-		return nil
-	}
-
-	client, err := hautechapi.NewClientWithResponses(apiURL, hautechapi.WithRequestEditorFn(authEditor))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create client: %w", err)
-	}
-
-	return client, nil
-}
-
-type ProviderContext struct {
-	Client *hautechapi.ClientWithResponses
-}
-
 func (p *hautechProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	var config providerModel
 
@@ -84,8 +68,9 @@ func (p *hautechProvider) Configure(ctx context.Context, req provider.ConfigureR
 		return
 	}
 
-	resp.ResourceData = &ProviderContext{Client: client}
-	resp.DataSourceData = &ProviderContext{Client: client}
+	contextClient := &Context{Client: client}
+	resp.ResourceData = contextClient
+	resp.DataSourceData = contextClient
 }
 
 func (p *hautechProvider) Resources(_ context.Context) []func() resource.Resource {
@@ -101,4 +86,18 @@ func (p *hautechProvider) DataSources(_ context.Context) []func() datasource.Dat
 		NewAccountBalanceDataSource,
 		NewAccountDataSource,
 	}
+}
+
+func createClient(apiURL string, apiToken string) (*hautechapi.ClientWithResponses, error) {
+	authEditor := func(ctx context.Context, req *http.Request) error {
+		req.Header.Set("Authorization", "Bearer "+apiToken)
+		return nil
+	}
+
+	client, err := hautechapi.NewClientWithResponses(apiURL, hautechapi.WithRequestEditorFn(authEditor))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create client: %w", err)
+	}
+
+	return client, nil
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
+	"hautech/config"
 	"hautech/provider"
 	"log"
 	"os"
@@ -20,14 +21,13 @@ func main() {
 	flag.Parse()
 
 	opts := providerserver.ServeOpts{
-		Address: "registry.terraform.io/hautech/api",
+		Address: config.GetProviderAddress(),
 		Debug:   debug,
 	}
 
-	err := providerserver.Serve(context.Background(), provider.New(provider.ProviderConfig{
-		ApiUrl: getApiUrl(),
+	err := providerserver.Serve(context.Background(), provider.New(provider.Config{
+		ApiUrl: config.GetApiUrl(),
 	}), opts)
-
 	if err != nil {
 		log.Fatal(err.Error())
 	}

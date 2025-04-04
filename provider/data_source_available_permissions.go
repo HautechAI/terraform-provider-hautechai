@@ -42,11 +42,11 @@ func (d *AvailablePermissionsDataSource) Schema(_ context.Context, _ datasource.
 
 func (d *AvailablePermissionsDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData != nil {
-		d.client = req.ProviderData.(*ProviderContext).Client
+		d.client = req.ProviderData.(*Context).Client
 	}
 }
 
-func (d *AvailablePermissionsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *AvailablePermissionsDataSource) Read(ctx context.Context, _ datasource.ReadRequest, resp *datasource.ReadResponse) {
 	permissions, err := d.getPermissions(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Get Permissions Error", err.Error())
@@ -72,7 +72,7 @@ func (d *AvailablePermissionsDataSource) getPermissions(ctx context.Context) (*[
 		return nil, fmt.Errorf("failed to call API: %w", err)
 	}
 
-	if resp.StatusCode() != http.StatusOK {
+	if resp.StatusCode() != http.StatusOK || resp.JSON200 == nil {
 		return nil, fmt.Errorf("unexpected status: %d - body: %s", resp.StatusCode(), string(resp.Body))
 	}
 

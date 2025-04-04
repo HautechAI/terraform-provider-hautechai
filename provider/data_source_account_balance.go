@@ -45,7 +45,7 @@ func (d *AccountBalanceDataSource) Schema(_ context.Context, _ datasource.Schema
 
 func (d *AccountBalanceDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData != nil {
-		d.client = req.ProviderData.(*ProviderContext).Client
+		d.client = req.ProviderData.(*Context).Client
 	}
 }
 
