@@ -91,6 +91,7 @@ func (p *hautechProvider) Configure(ctx context.Context, req provider.ConfigureR
 func (p *hautechProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewAccountResource,
+		NewCollectionResource,
 	}
 }
 

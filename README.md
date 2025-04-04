@@ -103,6 +103,38 @@ resource "hautech_account" "main" {
 }
 ```
 
+## 📘 `hautech_collection` Resource
+
+Manages a collection in the Hautech API.
+
+#### Example Usage
+
+```hcl
+resource "hautech_collection" "collection" {
+  metadata = {
+    foo  = "bar"
+    test = "123"
+  }
+}
+
+output "new_collection" {
+  value = hautech_collection.collection
+}
+```
+
+#### Attributes
+
+| Name     | Type             | Required | Description                      |
+|----------|------------------|----------|----------------------------------|
+| id       | `string`         | Computed | ID of the collection             |
+| metadata | `map(string)`    | Optional | Key-value pairs as metadata      |
+
+#### Behavior
+- If `metadata` changes, the resource will be replaced.
+- The `id` is assigned after the collection is created.
+
+This resource supports creation, reading, updating, and deletion of Hautech collections via API. Metadata is stored as a dynamic key-value map and passed to the backend as-is.
+
 ---
 
 ## 📘 `hautech_available_permissions` Data Source

@@ -626,7 +626,7 @@ type CollectionEntity struct {
 	CreatedAt time.Time              `json:"createdAt"`
 	CreatorId string                 `json:"creatorId"`
 	Id        string                 `json:"id"`
-	Kind      float32                `json:"kind"`
+	Kind      string                `json:"kind"`
 	Metadata  map[string]interface{} `json:"metadata"`
 	UpdatedAt time.Time              `json:"updatedAt"`
 }
