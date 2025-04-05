@@ -15,7 +15,7 @@ type CollectionResource struct {
 }
 
 type CollectionResourceModel struct {
-	Id       types.String `tfsdk:"id"`
+	ID       types.String `tfsdk:"id"`
 	Metadata types.Map    `tfsdk:"metadata"`
 }
 
@@ -70,7 +70,7 @@ func (r *CollectionResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	data.Id = types.StringValue(collection.Id)
+	data.ID = types.StringValue(collection.Id)
 	data.Metadata, _ = types.MapValueFrom(ctx, types.StringType, collection.Metadata)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -82,13 +82,13 @@ func (r *CollectionResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	collection, err := r.getCollectionByID(ctx, data.Id.ValueString())
+	collection, err := r.getCollectionByID(ctx, data.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Get Collection Error", err.Error())
 		return
 	}
 
-	data.Id = types.StringValue(collection.Id)
+	data.ID = types.StringValue(collection.Id)
 	data.Metadata, _ = types.MapValueFrom(ctx, types.StringType, collection.Metadata)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -115,13 +115,13 @@ func (r *CollectionResource) Update(ctx context.Context, req resource.UpdateRequ
 		metadata[k] = strVal.ValueString()
 	}
 
-	collection, err := r.updateCollection(ctx, state.Id.ValueString(), hautechapi.CollectionsControllerUpdateMetadataV1JSONRequestBody{Overwrite: metadata})
+	collection, err := r.updateCollection(ctx, state.ID.ValueString(), hautechapi.CollectionsControllerUpdateMetadataV1JSONRequestBody{Overwrite: metadata})
 	if err != nil {
 		resp.Diagnostics.AddError("Update Collection Error", err.Error())
 		return
 	}
 
-	data.Id = types.StringValue(collection.Id)
+	data.ID = types.StringValue(collection.Id)
 	data.Metadata, _ = types.MapValueFrom(ctx, types.StringType, collection.Metadata)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

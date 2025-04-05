@@ -198,7 +198,7 @@ data "hautech_account" "account" {
 }
 
 output "account" {
-  value = data.account.id
+  value = data.hautech_account.account.id
 }
 ```
 
@@ -207,3 +207,27 @@ output "account" {
 | Name | Type    | Required | Description                    |
 |------|---------|----------|--------------------------------|
 | id   | string  | ✅ Yes   | The ID of the account |
+
+---
+
+## 📚 `hautech_collection` Data Source
+
+This data source fetches the specific collection by its `id`.
+
+#### ⚙️ Example Usage
+
+```hcl
+data "hautech_collection" "collection" {
+  id = "your-collection-id-here"
+}
+
+output "collection" {
+  value = data.hautech_collection.collection.id
+}
+```
+
+#### 📅 Input Parameters
+
+| Name | Type    | Required | Description                    |
+|------|---------|----------|--------------------------------|
+| id   | string  | ✅ Yes   | The ID of the collection |
