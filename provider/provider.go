@@ -77,6 +77,7 @@ func (p *hautechProvider) Resources(_ context.Context) []func() resource.Resourc
 	return []func() resource.Resource{
 		NewAccountResource,
 		NewCollectionResource,
+		NewGroupResource,
 	}
 }
 
