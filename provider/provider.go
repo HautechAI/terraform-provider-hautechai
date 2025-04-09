@@ -78,6 +78,7 @@ func (p *hautechProvider) Resources(_ context.Context) []func() resource.Resourc
 		NewAccountResource,
 		NewCollectionResource,
 		NewGroupResource,
+		NewStackResource,
 	}
 }
 
@@ -87,6 +88,7 @@ func (p *hautechProvider) DataSources(_ context.Context) []func() datasource.Dat
 		NewAccountBalanceDataSource,
 		NewAccountDataSource,
 		NewCollectionDataSource,
+		NewStackDataSource,
 	}
 }
 
