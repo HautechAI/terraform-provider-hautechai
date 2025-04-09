@@ -3,11 +3,13 @@ package provider
 import (
 	"context"
 	"fmt"
+	"net/http"
+
+	hautechapi "hautech/api"
+
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	hautechapi "hautech/api"
-	"net/http"
 )
 
 type CollectionResource struct {
@@ -17,6 +19,7 @@ type CollectionResource struct {
 type CollectionResourceModel struct {
 	ID       types.String `tfsdk:"id"`
 	Metadata types.Map    `tfsdk:"metadata"`
+	Items    types.List   `tfsdk:"items"`
 }
 
 func NewCollectionResource() resource.Resource {
@@ -35,6 +38,10 @@ func (r *CollectionResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Computed: true,
 			},
 			"metadata": schema.MapAttribute{
+				Optional:    true,
+				ElementType: types.StringType,
+			},
+			"items": schema.ListAttribute{
 				Optional:    true,
 				ElementType: types.StringType,
 			},
@@ -72,6 +79,17 @@ func (r *CollectionResource) Create(ctx context.Context, req resource.CreateRequ
 
 	data.ID = types.StringValue(collection.Id)
 	data.Metadata, _ = types.MapValueFrom(ctx, types.StringType, collection.Metadata)
+
+	if !data.Items.IsNull() {
+		var itemIds []string
+		data.Items.ElementsAs(ctx, &itemIds, false)
+		err := r.updateCollectionItems(ctx, collection.Id, nil, itemIds)
+		if err != nil {
+			resp.Diagnostics.AddError("Add items Error", err.Error())
+			return
+		}
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -94,20 +112,20 @@ func (r *CollectionResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *CollectionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data CollectionResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	var plan CollectionResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...) // desired
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var state CollectionResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...) // current
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	metadata := make(map[string]interface{}, len(data.Metadata.Elements()))
-	for k, v := range data.Metadata.Elements() {
+	metadata := make(map[string]interface{}, len(plan.Metadata.Elements()))
+	for k, v := range plan.Metadata.Elements() {
 		strVal, ok := v.(types.String)
 		if !ok || strVal.IsNull() {
 			continue
@@ -121,9 +139,25 @@ func (r *CollectionResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	data.ID = types.StringValue(collection.Id)
-	data.Metadata, _ = types.MapValueFrom(ctx, types.StringType, collection.Metadata)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	plan.ID = types.StringValue(collection.Id)
+	plan.Metadata, _ = types.MapValueFrom(ctx, types.StringType, collection.Metadata)
+
+	var newItems, oldItems []string
+	plan.Items.ElementsAs(ctx, &newItems, false)
+	state.Items.ElementsAs(ctx, &oldItems, false)
+
+	toAdd := diffStrings(newItems, oldItems)
+	toRemove := diffStrings(oldItems, newItems)
+
+	if len(toAdd) > 0 || len(toRemove) > 0 {
+		err := r.updateCollectionItems(ctx, collection.Id, toRemove, toAdd)
+		if err != nil {
+			resp.Diagnostics.AddError("Update items Error", err.Error())
+			return
+		}
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *CollectionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -135,15 +169,12 @@ func (r *CollectionResource) getCollectionByID(ctx context.Context, id string) (
 	if err != nil {
 		return nil, fmt.Errorf("failed to call API: %w", err)
 	}
-
 	if resp.StatusCode() == http.StatusNotFound {
 		return nil, fmt.Errorf("collection not found")
 	}
-
 	if resp.StatusCode() != http.StatusOK || resp.JSON200 == nil {
 		return nil, fmt.Errorf("unexpected response: %d - body: %s", resp.StatusCode(), string(resp.Body))
 	}
-
 	return resp.JSON200, nil
 }
 
@@ -152,11 +183,9 @@ func (r *CollectionResource) createCollection(ctx context.Context, params hautec
 	if err != nil {
 		return nil, fmt.Errorf("failed to call API: %w", err)
 	}
-
 	if resp.StatusCode() != http.StatusCreated || resp.JSON201 == nil {
 		return nil, fmt.Errorf("unexpected response: %d - body: %s", resp.StatusCode(), string(resp.Body))
 	}
-
 	return resp.JSON201, nil
 }
 
@@ -165,14 +194,43 @@ func (r *CollectionResource) updateCollection(ctx context.Context, id string, pa
 	if err != nil {
 		return nil, fmt.Errorf("failed to call API: %w", err)
 	}
-
 	if resp.StatusCode() == http.StatusNotFound {
 		return nil, fmt.Errorf("collection not found")
 	}
-
 	if resp.StatusCode() != http.StatusOK || resp.JSON200 == nil {
 		return nil, fmt.Errorf("unexpected response: %d - body: %s", resp.StatusCode(), string(resp.Body))
 	}
-
 	return r.getCollectionByID(ctx, id)
+}
+
+func (r *CollectionResource) updateCollectionItems(ctx context.Context, collectionID string, removeIDs, addIDs []string) error {
+	if len(removeIDs) > 0 {
+		removeBody := hautechapi.CollectionsControllerRemoveItemsV1JSONRequestBody{ItemIds: removeIDs}
+		resp, err := r.client.CollectionsControllerRemoveItemsV1WithResponse(ctx, collectionID, removeBody)
+		if err != nil || resp.StatusCode() >= 300 {
+			return fmt.Errorf("failed to remove items: %v - %s", err, string(resp.Body))
+		}
+	}
+	if len(addIDs) > 0 {
+		addBody := hautechapi.CollectionsControllerAddItemsV1JSONRequestBody{ItemIds: addIDs}
+		resp, err := r.client.CollectionsControllerAddItemsV1WithResponse(ctx, collectionID, addBody)
+		if err != nil || resp.StatusCode() >= 300 {
+			return fmt.Errorf("failed to add items: %v - %s", err, string(resp.Body))
+		}
+	}
+	return nil
+}
+
+func diffStrings(a, b []string) []string {
+	m := make(map[string]struct{}, len(b))
+	for _, v := range b {
+		m[v] = struct{}{}
+	}
+	var diff []string
+	for _, v := range a {
+		if _, found := m[v]; !found {
+			diff = append(diff, v)
+		}
+	}
+	return diff
 }

@@ -134,6 +134,11 @@ resource "hautech_collection" "collection" {
     foo  = "bar"
     test = "123"
   }
+
+  items = [
+    "item-id-1",
+    "item-id-2"
+  ]
 }
 
 output "new_collection" {
@@ -147,12 +152,14 @@ output "new_collection" {
 |----------|------------------|----------|----------------------------------|
 | id       | `string`         | Computed | ID of the collection             |
 | metadata | `map(string)`    | Optional | Key-value pairs as metadata      |
+| items    | `list(string)`   | Optional | Item IDs to attach to collection |
 
 #### Behavior
-- If `metadata` changes, the resource will be replaced.
+- If `metadata` or `items` change, it syncs the collection accordingly.
+- On update, items not present in the plan are removed.
 - The `id` is assigned after the collection is created.
 
-This resource supports creation, reading, updating, and deletion of Hautech collections via API. Metadata is stored as a dynamic key-value map and passed to the backend as-is.
+This resource supports creation, reading, updating, and deletion of Hautech collections via API.
 
 ## 📘 `hautech_group` Resource
 
