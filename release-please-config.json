@@ -3,10 +3,7 @@
     ".": {
       "release-type": "go",
       "extra-files": [
-        {
-          "type": "markdown",
-          "path": "README.md"
-        }
+        "README.md"
       ]
     }
   }
