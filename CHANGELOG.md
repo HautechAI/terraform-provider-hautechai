@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/HautechAI/terraform-provider-hautechai/compare/v1.1.1...v1.1.2) (2025-04-10)
+
+
+### Bug Fixes
+
+* update GPG import and release config ([c5313c8](https://github.com/HautechAI/terraform-provider-hautechai/commit/c5313c8a38e6ddbaf889788113073f62c3df7f7a))
+
 ## [1.1.1](https://github.com/HautechAI/terraform-provider-hautechai/compare/v1.1.0...v1.1.1) (2025-04-10)
 
 
