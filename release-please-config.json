@@ -1,0 +1,8 @@
+{
+  "skip-github-pull-request": true,
+  "packages": {
+    ".": {
+      "release-type": "go"
+    }
+  }
+}
