@@ -4,10 +4,7 @@
       "release-type": "go",
       "extra-files": [
         {
-          "type": "markdown",
-          "path": "README.md",
-          "replace-marker": "<!-- version -->",
-          "content": "```hcl\nversion = \"{{version}}\"\n```"
+          "path": "README.md"
         }
       ]
     }
