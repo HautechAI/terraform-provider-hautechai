@@ -1,0 +1,17 @@
+name: Release - Tag
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release-tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Release Please
+        uses: googleapis/release-please-action@v4
