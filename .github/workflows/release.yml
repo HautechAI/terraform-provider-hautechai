@@ -15,3 +15,5 @@ jobs:
     steps:
       - name: Release Please
         uses: googleapis/release-please-action@v4
+        with:
+          skip-github-pull-request: true
