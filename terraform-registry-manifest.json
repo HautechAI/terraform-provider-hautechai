@@ -1,9 +1,0 @@
-{
-  "namespace": "hautech",
-  "type": "api",
-  "name": "terraform-provider-api",
-  "version": "0.1.0",
-  "metadata": {
-    "protocol_versions": ["5.0"]
-  }
-}
