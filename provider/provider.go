@@ -35,6 +35,7 @@ func New(cfg Config) func() provider.Provider {
 
 type providerModel struct {
 	ApiToken types.String `tfsdk:"api_token"`
+	ApiUrl   types.String `tfsdk:"api_url"`
 }
 
 func (p *hautechProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -49,6 +50,10 @@ func (p *hautechProvider) Schema(_ context.Context, _ provider.SchemaRequest, re
 				Optional:    true,
 				Description: "API token. Read how to get it: https://docs.hautech.ai/getting-started",
 			},
+			"api_url": schema.StringAttribute{
+				Optional:    true,
+				Description: "API URL. If not provided, the default URL will be used.",
+			},
 		},
 	}
 }
@@ -62,7 +67,13 @@ func (p *hautechProvider) Configure(ctx context.Context, req provider.ConfigureR
 		return
 	}
 
-	client, err := createClient(p.apiUrl, config.ApiToken.ValueString())
+	// Use user-provided API URL if available, otherwise use the default
+	apiUrl := p.apiUrl
+	if !config.ApiUrl.IsNull() && config.ApiUrl.ValueString() != "" {
+		apiUrl = config.ApiUrl.ValueString()
+	}
+
+	client, err := createClient(apiUrl, config.ApiToken.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error while creating http client", err.Error())
 		return
