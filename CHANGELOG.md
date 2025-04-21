@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/HautechAI/terraform-provider-hautechai/compare/v1.1.2...v1.2.0) (2025-04-21)
+
+
+### Features
+
+* add API URL configuration option ([27c7e73](https://github.com/HautechAI/terraform-provider-hautechai/commit/27c7e73be72023a419386a58f6e37c7553afe5a2))
+
 ## [1.1.2](https://github.com/HautechAI/terraform-provider-hautechai/compare/v1.1.1...v1.1.2) (2025-04-10)
 
 
