@@ -10,7 +10,7 @@ terraform {
   required_providers {
     hautech = {
       source  = "hautech/api"
-      version = "<!-- x-release-please-version -->"
+      version = "${VERSION}"
     }
   }
 }
