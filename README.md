@@ -21,8 +21,16 @@ terraform {
 ```hcl
 provider "hautech" {
   api_token = "your_token_here" # Replace with your real token
+  api_url   = "https://custom-api.example.com" # Optional: Override the default API URL
 }
 ```
+
+#### Provider Configuration Parameters
+
+| Name      | Type   | Required | Description                                                |
+|-----------|--------|----------|------------------------------------------------------------|
+| api_token | string | Yes      | Your Hautech API token                                     |
+| api_url   | string | No       | Custom API URL. If not provided, the default URL will be used |
 
 ### 3. Use data source: fetch available permissions
 
