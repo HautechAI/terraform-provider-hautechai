@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/HautechAI/terraform-provider-hautechai/compare/v1.4.0...v1.4.1) (2025-04-23)
+
+
+### Bug Fixes
+
+* remove redundant signing artifact configuration ([4fcee53](https://github.com/HautechAI/terraform-provider-hautechai/commit/4fcee536cb5c9b21f8700bec738b6291637bd040))
+
 ## [1.4.0](https://github.com/HautechAI/terraform-provider-hautechai/compare/v1.3.0...v1.4.0) (2025-04-23)
 
 
