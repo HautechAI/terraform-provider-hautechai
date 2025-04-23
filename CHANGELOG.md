@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.0](https://github.com/HautechAI/terraform-provider-hautechai/compare/v1.2.0...v1.3.0) (2025-04-23)
+
+
+### Features
+
+* enhance provider configuration documentation ([e3c0b14](https://github.com/HautechAI/terraform-provider-hautechai/commit/e3c0b14693df9b38c779cc71c71790ee7cb5b1cf))
+
+
+### Bug Fixes
+
+* update provider and resource naming conventions ([70bd2d3](https://github.com/HautechAI/terraform-provider-hautechai/commit/70bd2d3ea41ead166b8f6653f32616c96bb364bd))
+
 ## [1.2.0](https://github.com/HautechAI/terraform-provider-hautechai/compare/v1.1.2...v1.2.0) (2025-04-21)
 
 
