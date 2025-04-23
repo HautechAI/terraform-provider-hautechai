@@ -1,8 +1,7 @@
 #!/bin/bash
 
 OS=$(go env GOOS)
-# ARCH=$(go env GOARCH)
-ARCH="arm64"
+ARCH="$(go env GOARCH)"
 VERSION="0.1.0-dev"
 PROVIDER_NAME="hautechai"
 NAMESPACE="HautechAI"
