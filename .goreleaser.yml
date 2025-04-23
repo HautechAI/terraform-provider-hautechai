@@ -46,15 +46,6 @@ signs:
       - "${signature}"
       - "--detach-sign"
       - "${artifact}"
-  - artifacts: manifests
-    args:
-      - "--batch"
-      - "--local-user"
-      - "{{ .Env.GPG_FINGERPRINT }}"
-      - "--output"
-      - "${signature}"
-      - "--detach-sign"
-      - "${artifact}"
 release:
   extra_files:
     - glob: "terraform-registry-manifest.json"
