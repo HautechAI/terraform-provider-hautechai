@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/HautechAI/terraform-provider-hautechai/compare/v1.3.0...v1.4.0) (2025-04-23)
+
+
+### Features
+
+* update GPG signing in the build process ([e945c39](https://github.com/HautechAI/terraform-provider-hautechai/commit/e945c39623156550d9618e81f0af36b43fbdc029)), closes [#456](https://github.com/HautechAI/terraform-provider-hautechai/issues/456)
+
 ## [1.3.0](https://github.com/HautechAI/terraform-provider-hautechai/compare/v1.2.0...v1.3.0) (2025-04-23)
 
 
