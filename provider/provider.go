@@ -39,7 +39,7 @@ type providerModel struct {
 }
 
 func (p *hautechProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
-	resp.TypeName = "hautech"
+	resp.TypeName = "hautechai"
 }
 
 func (p *hautechProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {

@@ -8,8 +8,8 @@ You can check API [here](https://api.hautech.ai/swagger)
 ```hcl
 terraform {
   required_providers {
-    hautech = {
-      source  = "hautech/api"
+    hautechai = {
+      source  = "HautechAI/hautechai"
       version = "${VERSION}"
     }
   }
@@ -19,7 +19,7 @@ terraform {
 ### 2. Configure the provider
 
 ```hcl
-provider "hautech" {
+provider "hautechai" {
   api_token = "your_token_here" # Replace with your real token
   api_url   = "https://custom-api.example.com" # Optional: Override the default API URL
 }
@@ -35,14 +35,14 @@ provider "hautech" {
 ### 3. Use data source: fetch available permissions
 
 ```hcl
-data "hautech_available_permissions" "permissions" {}
+data "hautechai_available_permissions" "permissions" {}
 ```
 
 ### 4. Output the result
 
 ```hcl
 output "permissions" {
-  value = data.hautech_available_permissions.permissions.items
+  value = data.hautechai_available_permissions.permissions.items
 }
 ```
 ---
@@ -61,7 +61,7 @@ This will:
 - Build the provider binary
 - Copy it into your local Terraform plugin directory under:
   ```
-  ~/.terraform.d/plugins/registry.terraform.io/hautech/api/0.1.0-dev/<os>_<arch>/terraform-provider-api
+  ~/.terraform.d/plugins/registry.terraform.io/HautechAI/hautechai/0.1.0-dev/<os>_<arch>/terraform-provider-api
   ```
 
 2. Then use it like a normal provider in your Terraform project:
@@ -69,8 +69,8 @@ This will:
 ```hcl
 terraform {
   required_providers {
-    hautech = {
-      source  = "hautech/api"
+    hautechai = {
+      source  = "HautechAI/hautechai"
       version = "0.1.0-dev"
     }
   }
@@ -79,7 +79,7 @@ terraform {
 
 ---
 
-## 📘 `hautech_account` Resource
+## 📘 `hautechai_account` Resource
 
 This resource manages an account in the Hautech API.
 
@@ -120,7 +120,7 @@ On `create` and `update`, the logic is:
 ### Example
 
 ```hcl
-resource "hautech_account" "main" {
+resource "hautechai_account" "main" {
   alias = "example-account"
 
   group = {
@@ -130,14 +130,14 @@ resource "hautech_account" "main" {
 }
 ```
 
-## 📘 `hautech_collection` Resource
+## 📘 `hautechai_collection` Resource
 
 Manages a collection in the Hautech API.
 
 #### Example Usage
 
 ```hcl
-resource "hautech_collection" "collection" {
+resource "hautechai_collection" "collection" {
   metadata = {
     foo  = "bar"
     test = "123"
@@ -150,7 +150,7 @@ resource "hautech_collection" "collection" {
 }
 
 output "new_collection" {
-  value = hautech_collection.collection
+  value = hautechai_collection.collection
 }
 ```
 
@@ -169,14 +169,14 @@ output "new_collection" {
 
 This resource supports creation, reading, updating, and deletion of Hautech collections via API.
 
-## 📘 `hautech_stack` Resource
+## 📘 `hautechai_stack` Resource
 
 Manages a stack in the Hautech API.
 
 #### Example Usage
 
 ```hcl
-resource "hautech_stack" "stack" {
+resource "hautechai_stack" "stack" {
   metadata = {
     foo  = "bar"
     test = "123"
@@ -189,7 +189,7 @@ resource "hautech_stack" "stack" {
 }
 
 output "new_stack" {
-  value = hautech_stack.stack
+  value = hautechai_stack.stack
 }
 ```
 
@@ -209,17 +209,17 @@ output "new_stack" {
 This resource supports creation, reading, updating, and deletion of Hautech stacks via API.
 
 
-## 📘 `hautech_group` Resource
+## 📘 `hautechai_group` Resource
 
 Manages a group in the Hautech API.
 
 ### Example Usage
 
 ```hcl
-resource "hautech_group" "group" {}
+resource "hautechai_group" "group" {}
 
 output "group_id" {
-  value = hautech_group.group.id
+  value = hautechai_group.group.id
 }
 ```
 
@@ -237,14 +237,14 @@ The resource supports create, read, and delete operations for Hautech groups. No
 
 ---
 
-## 📚 `hautech_available_permissions` Data Source
+## 📚 `hautechai_available_permissions` Data Source
 
 This data source fetches the list of available permissions from the Hautech API.
 
 ### Example
 
 ```hcl
-data "hautech_available_permissions" "permissions" {}
+data "hautechai_available_permissions" "permissions" {}
 ```
 
 ### Output Attributes
@@ -254,19 +254,19 @@ data "hautech_available_permissions" "permissions" {}
 | items  | `list(string)`| List of available permission identifiers |
 
 
-## 📚 `hautech_account_balance` Data Source
+## 📚 `hautechai_account_balance` Data Source
 
 This data source fetches the balance of a specific account by its `account_id`.
 
 #### ⚙️ Example Usage
 
 ```hcl
-data "hautech_account_balance" "balance" {
+data "hautechai_account_balance" "balance" {
   account_id = "your-account-id-here"
 }
 
 output "balance" {
-  value = data.hautech_account_balance.balance.amount
+  value = data.hautechai_account_balance.balance.amount
 }
 ```
 
@@ -283,19 +283,19 @@ output "balance" {
 | amount  | string | The current balance |
 
 
-## 📚 `hautech_account` Data Source
+## 📚 `hautechai_account` Data Source
 
 This data source fetches the specific account by its `id`.
 
 #### ⚙️ Example Usage
 
 ```hcl
-data "hautech_account" "account" {
+data "hautechai_account" "account" {
   id = "your-account-id-here"
 }
 
 output "account" {
-  value = data.hautech_account.account.id
+  value = data.hautechai_account.account.id
 }
 ```
 
@@ -306,19 +306,19 @@ output "account" {
 | id   | string  | ✅ Yes   | The ID of the account |
 
 
-## 📚 `hautech_collection` Data Source
+## 📚 `hautechai_collection` Data Source
 
 This data source fetches the specific collection by its `id`.
 
 #### ⚙️ Example Usage
 
 ```hcl
-data "hautech_collection" "collection" {
+data "hautechai_collection" "collection" {
   id = "your-collection-id-here"
 }
 
 output "collection" {
-  value = data.hautech_collection.collection.id
+  value = data.hautechai_collection.collection.id
 }
 ```
 
@@ -328,19 +328,19 @@ output "collection" {
 |------|---------|----------|--------------------------------|
 | id   | string  | ✅ Yes   | The ID of the collection |
 
-## 📚 `hautech_stack` Data Source
+## 📚 `hautechai_stack` Data Source
 
 This data source fetches the specific stack by its `id`.
 
 #### ⚙️ Example Usage
 
 ```hcl
-data "hautech_stack" "stack" {
+data "hautechai_stack" "stack" {
   id = "your-stack-id-here"
 }
 
 output "stack" {
-  value = data.hautech_stack.stack.id
+  value = data.hautechai_stack.stack.id
 }
 ```
 

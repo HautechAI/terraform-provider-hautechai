@@ -1,10 +1,11 @@
 #!/bin/bash
 
 OS=$(go env GOOS)
-ARCH=$(go env GOARCH)
+# ARCH=$(go env GOARCH)
+ARCH="arm64"
 VERSION="0.1.0-dev"
-PROVIDER_NAME="api"
-NAMESPACE="hautech"
+PROVIDER_NAME="hautechai"
+NAMESPACE="HautechAI"
 REGISTRY="registry.terraform.io"
 REGISTRY_PATH="$HOME/.terraform.d/plugins/$REGISTRY/$NAMESPACE/$PROVIDER_NAME/$VERSION/${OS}_${ARCH}"
 
