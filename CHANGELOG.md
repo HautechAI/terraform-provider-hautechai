@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/HautechAI/terraform-provider-hautechai/compare/v1.4.1...v1.5.0) (2025-05-28)
+
+
+### Features
+
+* trigger release ([c1e4a3c](https://github.com/HautechAI/terraform-provider-hautechai/commit/c1e4a3c3c157fbaec446d0b52d20d09bea5450f7))
+
 ## [1.4.1](https://github.com/HautechAI/terraform-provider-hautechai/compare/v1.4.0...v1.4.1) (2025-04-23)
 
 
