@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/HautechAI/terraform-provider-hautechai/compare/v1.5.1...v1.6.0) (2025-05-28)
+
+
+### Features
+
+* add resource access management support ([ee308b9](https://github.com/HautechAI/terraform-provider-hautechai/commit/ee308b9f896eee6509d82cef87d322a8567351b8))
+
 ## [1.5.1](https://github.com/HautechAI/terraform-provider-hautechai/compare/v1.5.0...v1.5.1) (2025-05-28)
 
 
