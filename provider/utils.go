@@ -5,11 +5,13 @@ func diffStrings(a, b []string) []string {
 	for _, v := range b {
 		m[v] = struct{}{}
 	}
+
 	var diff []string
 	for _, v := range a {
 		if _, found := m[v]; !found {
 			diff = append(diff, v)
 		}
 	}
+	
 	return diff
 }
