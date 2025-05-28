@@ -78,7 +78,12 @@ func (r *CollectionResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	data.ID = types.StringValue(collection.Id)
-	data.Metadata, _ = types.MapValueFrom(ctx, types.StringType, collection.Metadata)
+
+	if data.Metadata.IsNull() && len(collection.Metadata) == 0 {
+		data.Metadata = types.MapNull(types.StringType)
+	} else {
+		data.Metadata, _ = types.MapValueFrom(ctx, types.StringType, collection.Metadata)
+	}
 
 	if !data.Items.IsNull() {
 		var itemIds []string
@@ -107,7 +112,13 @@ func (r *CollectionResource) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	data.ID = types.StringValue(collection.Id)
-	data.Metadata, _ = types.MapValueFrom(ctx, types.StringType, collection.Metadata)
+
+	if data.Metadata.IsNull() && len(collection.Metadata) == 0 {
+		data.Metadata = types.MapNull(types.StringType)
+	} else {
+		data.Metadata, _ = types.MapValueFrom(ctx, types.StringType, collection.Metadata)
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -140,7 +151,12 @@ func (r *CollectionResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	plan.ID = types.StringValue(collection.Id)
-	plan.Metadata, _ = types.MapValueFrom(ctx, types.StringType, collection.Metadata)
+
+	if plan.Metadata.IsNull() && len(collection.Metadata) == 0 {
+		plan.Metadata = types.MapNull(types.StringType)
+	} else {
+		plan.Metadata, _ = types.MapValueFrom(ctx, types.StringType, collection.Metadata)
+	}
 
 	var newItems, oldItems []string
 	plan.Items.ElementsAs(ctx, &newItems, false)

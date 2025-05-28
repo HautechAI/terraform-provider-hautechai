@@ -78,7 +78,12 @@ func (r *StackResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	data.ID = types.StringValue(stack.Id)
-	data.Metadata, _ = types.MapValueFrom(ctx, types.StringType, stack.Metadata)
+
+	if data.Metadata.IsNull() && len(stack.Metadata) == 0 {
+		data.Metadata = types.MapNull(types.StringType)
+	} else {
+		data.Metadata, _ = types.MapValueFrom(ctx, types.StringType, stack.Metadata)
+	}
 
 	if !data.Items.IsNull() {
 		var itemIds []string
@@ -107,7 +112,13 @@ func (r *StackResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 
 	data.ID = types.StringValue(stack.Id)
-	data.Metadata, _ = types.MapValueFrom(ctx, types.StringType, stack.Metadata)
+
+	if data.Metadata.IsNull() && len(stack.Metadata) == 0 {
+		data.Metadata = types.MapNull(types.StringType)
+	} else {
+		data.Metadata, _ = types.MapValueFrom(ctx, types.StringType, stack.Metadata)
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -140,7 +151,12 @@ func (r *StackResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 
 	plan.ID = types.StringValue(stack.Id)
-	plan.Metadata, _ = types.MapValueFrom(ctx, types.StringType, stack.Metadata)
+
+	if plan.Metadata.IsNull() && len(stack.Metadata) == 0 {
+		plan.Metadata = types.MapNull(types.StringType)
+	} else {
+		plan.Metadata, _ = types.MapValueFrom(ctx, types.StringType, stack.Metadata)
+	}
 
 	var newItems, oldItems []string
 	plan.Items.ElementsAs(ctx, &newItems, false)

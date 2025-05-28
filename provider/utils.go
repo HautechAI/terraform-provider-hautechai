@@ -12,6 +12,6 @@ func diffStrings(a, b []string) []string {
 			diff = append(diff, v)
 		}
 	}
-	
+
 	return diff
 }
