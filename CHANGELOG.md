@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/HautechAI/terraform-provider-hautechai/compare/v1.5.0...v1.5.1) (2025-05-28)
+
+
+### Bug Fixes
+
+* correctly handle empty metadata maps ([46990db](https://github.com/HautechAI/terraform-provider-hautechai/commit/46990db26e9b798a0aa5c073e5c7abd5ec33c8b7))
+
 ## [1.5.0](https://github.com/HautechAI/terraform-provider-hautechai/compare/v1.4.1...v1.5.0) (2025-05-28)
 
 
