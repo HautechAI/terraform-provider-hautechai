@@ -44,7 +44,7 @@ func (p *hautechProvider) Metadata(_ context.Context, _ provider.MetadataRequest
 
 func (p *hautechProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Hautech provider for calling the Hautech API.",
+		Description: "Hautech provider for calling the Hautech API",
 		Attributes: map[string]schema.Attribute{
 			"api_token": schema.StringAttribute{
 				Optional:    true,
@@ -52,7 +52,7 @@ func (p *hautechProvider) Schema(_ context.Context, _ provider.SchemaRequest, re
 			},
 			"api_url": schema.StringAttribute{
 				Optional:    true,
-				Description: "API URL. If not provided, the default URL will be used.",
+				Description: "API URL. If not provided, the default URL will be used",
 			},
 		},
 	}
