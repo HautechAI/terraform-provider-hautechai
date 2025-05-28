@@ -1,7 +1,7 @@
 #!/bin/bash
 
 OS=$(go env GOOS)
-ARCH="$(go env GOARCH)"
+ARCH="$(uname -m)"
 VERSION="0.1.0-dev"
 PROVIDER_NAME="hautechai"
 NAMESPACE="HautechAI"
