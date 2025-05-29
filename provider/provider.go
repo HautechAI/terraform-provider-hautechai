@@ -91,6 +91,7 @@ func (p *hautechProvider) Resources(_ context.Context) []func() resource.Resourc
 		NewGroupResource,
 		NewStackResource,
 		NewResourceAccessResource,
+		NewStorageResource,
 	}
 }
 
