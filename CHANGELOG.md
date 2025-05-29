@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/HautechAI/terraform-provider-hautechai/compare/v1.6.0...v1.7.0) (2025-05-29)
+
+
+### Features
+
+* add storage resource with full CRUD support ([e019f86](https://github.com/HautechAI/terraform-provider-hautechai/commit/e019f8648d59ba632cb36a6a38171c82f94b29af))
+
 ## [1.6.0](https://github.com/HautechAI/terraform-provider-hautechai/compare/v1.5.1...v1.6.0) (2025-05-28)
 
 
